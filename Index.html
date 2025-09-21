@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday, preeti!</title>
+    <!-- Tailwind CSS CDN for modern utilities and responsiveness -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Google Fonts for Playfair Display and Satoshi -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Three.js CDN for 3D hearts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"></script>
+    <!-- GSAP CDN for advanced animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        /* Global Styles */
+        :root {
+            --dark-bg: #0c0a09;
+            --pink-light: hsla(333,70%,55%,.4);
+            --purple-light: hsla(282, 82%, 54%, .3);
+            --blue-light: hsla(210, 89%, 60%, .3);
+            --gold-light: hsla(35, 90%, 60%, .3);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-light: #e0e0e0;
+            --text-dark-glass: rgba(255, 255, 255, 0.6);
+            --primary-gradient: linear-gradient(45deg, #FF6B6B, #EE3366); /* Pink to Red */
+            --button-glow: 0 0 15px rgba(255, 107, 107, 0.7);
+            --button-hover-glow: 0 0 25px rgba(255, 107, 107, 1);
+            --progress-gradient: linear-gradient(90deg, #FF6B6B, #EE3366);
+        }
+
+        body {
+            font-family: 'Satoshi', sans-serif;
+            color: var(--text-light);
+            background-color: var(--dark-bg);
+            overflow: hidden; /* Prevent scrollbar due to canvas */
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><text x='0' y='28' font-size='28' fill='%23e0e0e0'>✨</text></svg>") 16 16, auto;
+        }
+
+        /* Aurora Background */
+        #aurora-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, var(--pink-light) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, var(--purple-light) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 50%, var(--blue-light) 0%, transparent 60%),
+                        radial-gradient(circle at 70% 70%, var(--gold-light) 0%, transparent 50%);
+            background-size: 200% 200%;
+            animation: aurora-flow 25s ease-in-out infinite alternate;
+            z-index: -2;
+        }
+
+        @keyframes aurora-flow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        /* Three.js Canvas for 3D Hearts */
+        #threejs-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none; /* Allow interaction with elements behind canvas */
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px); /* Heavy frosted glass effect */
+            -webkit-backdrop-filter: blur(25px); /* Safari support */
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Soft shadow */
+            padding: 2.5rem;
+            max-width: 700px;
+            margin: auto;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        /* Typography */
+        h1, h2 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            background: linear-gradient(45deg, #FFD700, #FF69B4, #FFFFFF); /* Gold, Pink, White */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent; /* Fallback for browsers not supporting background-clip: text */
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+        h1 { font-size: 3.5rem; } /* Adjust as needed */
+        h2 { font-size: 2.5rem; } /* Adjust as needed */
+
+        p {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Button Styles */
+        .btn {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 9999px; /* Pill shape */
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease-in-out;
+            box-shadow: var(--button-glow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: var(--button-hover-glow);
+        }
+
+        .btn:active {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: var(--button-glow);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Icons with Pulsating Glow */
+        .glowing-icon {
+            font-size: 4rem;
+            animation: pulse-glow 2s infinite alternate;
+            display: inline-block;
+        }
+
+        @keyframes pulse-glow {
+            0% { text-shadow: 0 0 5px var(--pink-light), 0 0 10px var(--pink-light); transform: scale(1); }
+            100% { text-shadow: 0 0 15px var(--pink-light), 0 0 25px var(--pink-light); transform: scale(1.05); }
+        }
+
+        /* Progress Bar */
+        #progress-bar-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 600px;
+            height: 10px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 5px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--progress-gradient);
+            border-radius: 5px;
+            transition: width 0.7s ease-out;
+        }
+
+        /* Bento Grid for Step 3 */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .bento-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .bento-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #FFC0CB, #E0BBE4, #FFB6C1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .bento-card p {
+            font-size: 0.95rem;
+            color: var(--text-dark-glass);
+            margin-bottom: 0;
+            line-height: 1.5;
+        }
+
+        .bento-card.span-2 {
+            grid-column: span 2;
+        }
+
+        /* Polaroid Style for Step 4 */
+        .polaroid {
+            background: #f0f0f0; /* Classic white border */
+            padding: 15px 15px 50px 15px; /* Space for caption */
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: inline-block;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.2s ease-out;
+            margin-bottom: 2rem;
+        }
+        .polaroid img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 2px;
+            object-fit: cover;
+            max-height: 250px; /* Limit image height */
+        }
+        .polaroid-caption {
+            position: absolute;
+            bottom: 10px;
+            left: 15px;
+            right: 15px;
+            text-align: center;
+            font-family: 'Satoshi', sans-serif;
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: 700;
+        }
+
+        /* Confetti Overlay */
+        #confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000; /* Above everything else */
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 2rem; }
+            p { font-size: 1rem; }
+            .glass-card {
+                padding: 1.5rem;
+                border-radius: 16px;
+                max-width: 90%;
+            }
+            .btn {
+                padding: 0.8rem 1.8rem;
+                font-size: 1rem;
+            }
+            .glowing-icon {
+                font-size: 3rem;
+            }
+            .bento-grid {
+                grid-template-columns: 1fr; /* Stack columns on small screens */
+            }
+            .bento-card.span-2 {
+                grid-column: span 1;
+            }
+            #progress-bar-container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div id="aurora-bg"></div>
+    <canvas id="threejs-canvas"></canvas>
+
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <main class="relative z-10 p-4 w-full flex flex-col items-center justify-center">
+
+        <!-- Step 1: The Grand Welcome -->
+        <div id="step-1" class="step glass-card text-center transition-all duration-700 ease-out absolute opacity-0 scale-95">
+            <div class="flex flex-col items-center">
+                <span class="glowing-icon mb-6">❤️</span>
+                <h2 class="text-5xl md:text-6xl mb-4">Hey Beautiful,</h2>
+                <p class="text-lg md:text-xl max-w-lg mb-8">
+                    I built a little world for you, just to bring a smile to your face on your special day.
+                </p>
+                <button class="btn next-step-btn">
+                    Let's Begin <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414L8.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: The Core Message -->
+        <div id="step-2" class="step glass-card text-center transition-all duration-700 ease-out absolute opacity-0 scale-95">
+            <div class="flex flex-col items-center">
+                <span class="glowing-icon mb-6">🎉</span>
+                <h2 class="text-5xl md:text-6xl mb-4">Happy Birthday preeti !</h2>
+                <p class="text-lg md:text-xl max-w-lg mb-8">
+                    Another year of you making the world brighter. Your existence is a gift, and I'm so lucky to witness it.
+                </p>
+                <button class="btn next-step-btn">
+                    There's more... <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414L8.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: The Reasons Why (Bento Grid) -->
+        <div id="step-3" class="step glass-card text-center transition-all duration-700 ease-out absolute opacity-0 scale-95">
+            <h2 class="text-4xl md:text-5xl mb-6 text-center">A Few Things I Adore About You</h2>
+            <div class="bento-grid">
+                <div class="bento-card span-2">
+                    <h3>❤️ Your unmatched kindness</h3>
+                    <p>The butka attitude you show to everyone is something truly rare and beautiful.</p>
+                </div>
+                <div class="bento-card">
+                    <h3>😊 That Smile</h3>
+                    <p>It's a work of art.</p>
+                </div>
+                <div class="bento-card span-2">
+                    <h3>✨ Your Radiant Spirit</h3>
+                    <p>Your passion for life is infectious. Being around you makes everything feel more exciting and possible.</p>
+                </div>
+            </div>
+            <button class="btn next-step-btn mt-6">
+                Remember this? <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414L8.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Step 4: The Shared Memory -->
+        <div id="step-4" class="step glass-card text-center transition-all duration-700 ease-out absolute opacity-0 scale-95">
+            <h2 class="text-4xl md:text-5xl mb-6">That One Time...</h2>
+            <div id="polaroid-wrapper" class="inline-block relative">
+                <div class="polaroid" style="transform: rotateZ(-5deg) rotateY(5deg);">
+                    <img src="https://i.ibb.co/6Z6XgCg/crush.webp" alt="Our favorite memory">
+                    <div class="polaroid-caption">Our favorite memory.</div>
+                </div>
+            </div>
+            <p class="text-lg md:text-xl max-w-lg mb-8 mx-auto">
+                Every moment with you feels like a scene from a movie I'd watch on repeat.
+            </p>
+            <button class="btn next-step-btn">
+                One last thing... <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M4.293 15.707a1 1 0 010-1.414L8.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Step 5: The Birthday Wish & Finale -->
+        <div id="step-5" class="step glass-card text-center transition-all duration-700 ease-out absolute opacity-0 scale-95">
+            <div class="flex flex-col items-center">
+                <span class="glowing-icon mb-6">🎂</span>
+                <h2 class="text-4xl md:text-5xl mb-4">My Wish For You</h2>
+                <p class="text-lg md:text-xl max-w-lg mb-8">
+                    May The Next Year Bring You All The Love, Success, And Pure Happiness You So Rightfully Deserve. May Your Dreams Soar Higher Than Ever.
+                </p>
+                <p id="final-message" class="text-4xl md:text-5xl font-bold mt-12 mb-8 opacity-0">Happy Birthday, preeti ji❤️! 🎉</p>
+                <button id="celebrate-btn" class="btn">
+                    Celebrate! <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Confetti Container -->
+    <div id="confetti-container"></div>
+
+    <script>
+        gsap.registerPlugin(TextPlugin); // Register TextPlugin for text animations
+
+        const steps = document.querySelectorAll('.step');
+        let currentStepIndex = 0;
+        const progressBar = document.getElementById('progress-bar');
+        const totalSteps = steps.length;
+
+        // Initialize first step
+        gsap.set(steps[0], { opacity: 1, scale: 1, y: '0%' }); // Make first step visible initially
+
+        // Function to update progress bar
+        function updateProgressBar() {
+            const progress = ((currentStepIndex + 1) / totalSteps) * 100;
+            gsap.to(progressBar, { width: `${progress}%`, duration: 0.7, ease: 'power2.out' });
+        }
+
+        updateProgressBar(); // Set initial progress
+
+        // Step Navigation Logic
+        document.querySelectorAll('.next-step-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                if (currentStepIndex < steps.length - 1) {
+                    gsap.to(steps[currentStepIndex], {
+                        opacity: 0,
+                        scale: 0.95,
+                        y: '-10%', // Slide down slightly
+                        duration: 0.6,
+                        ease: 'power2.inOut',
+                        onComplete: () => {
+                            currentStepIndex++;
+                            gsap.fromTo(steps[currentStepIndex],
+                                { opacity: 0, scale: 0.95, y: '10%' }, // Start from slightly below
+                                {
+                                    opacity: 1,
+                                    scale: 1,
+                                    y: '0%',
+                                    duration: 0.7,
+                                    ease: 'power2.out',
+                                    onStart: () => {
+                                        // Stagger internal elements
+                                        gsap.fromTo(steps[currentStepIndex].children,
+                                            { opacity: 0, y: 20 },
+                                            { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }
+                                        );
+                                    }
+                                }
+                            );
+                            updateProgressBar();
+                        }
+                    });
+                }
+            });
+        });
+
+        // Polaroid Parallax Effect for Step 4
+        const polaroidWrapper = document.getElementById('polaroid-wrapper');
+        const polaroid = document.querySelector('.polaroid');
+
+        if (polaroidWrapper && polaroid) {
+            polaroidWrapper.addEventListener('mousemove', (e) => {
+                const rect = polaroidWrapper.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const rotateX = (y - centerY) / centerY * 10; // Max 10 degrees tilt
+                const rotateY = (x - centerX) / centerX * 10; // Max 10 degrees tilt
+
+                gsap.to(polaroid, {
+                    rotationX: -rotateX,
+                    rotationY: rotateY,
+                    x: (x - centerX) * 0.1,
+                    y: (y - centerY) * 0.1,
+                    duration: 0.5,
+                    ease: "power2.out"
+                });
+            });
+
+            polaroidWrapper.addEventListener('mouseleave', () => {
+                gsap.to(polaroid, {
+                    rotationX: 0,
+                    rotationY: 0,
+                    x: 0,
+                    y: 0,
+                    rotationZ: -5, // Restore initial tilt
+                    rotationY: 5, // Restore initial tilt
+                    duration: 0.7,
+                    ease: "elastic.out(1, 0.5)"
+                });
+            });
+        }
+
+        // Three.js 3D Hearts Background
+        let scene, camera, renderer, hearts = [];
+        const numHearts = 25;
+        const heartGeometry = createHeartGeometry(); // Function to create a heart shape
+        const heartMaterial = new THREE.MeshPhongMaterial({
+            color: 0xFF69B4, // Pink
+            specular: 0xAAAAAA,
+            shininess: 100
+        });
+
+        function createHeartGeometry() {
+            const shape = new THREE.Shape();
+            const x = -0.5, y = -0.5; // Adjusted starting point for better centering
+            shape.moveTo(x + 0.5, y + 0.5); // Center point reference
+            shape.bezierCurveTo(x + 0.5, y + 0.5, x + 0.4, y, x, y);
+            shape.bezierCurveTo(x - 0.6, y, x - 0.6, y + 0.7, x - 0.6, y + 0.7);
+            shape.bezierCurveTo(x - 0.6, y + 1.1, x - 0.3, y + 1.54, x + 0.5, y + 1.9);
+            shape.bezierCurveTo(x + 1.3, y + 1.54, x + 1.6, y + 1.1, x + 1.6, y + 0.7);
+            shape.bezierCurveTo(x + 1.6, y + 0.7, x + 1.6, y, x + 1, y);
+            shape.bezierCurveTo(x + 0.7, y, x + 0.5, y + 0.5, x + 0.5, y + 0.5);
+
+            const extrudeSettings = {
+                steps: 2,
+                depth: 0.2,
+                bevelEnabled: true,
+                bevelThickness: 0.1,
+                bevelSize: 0.1,
+                bevelSegments: 2
+            };
+            return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        }
+
+        function initThreeJS() {
+            const canvas = document.getElementById('threejs-canvas');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 2);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+            pointLight.position.set(5, 5, 5);
+            scene.add(pointLight);
+
+            // Create hearts
+            for (let i = 0; i < numHearts; i++) {
+                const heart = new THREE.Mesh(heartGeometry, heartMaterial.clone()); // Clone material for individual color/settings if needed
+                heart.position.set(
+                    (Math.random() - 0.5) * 40,
+                    (Math.random() - 0.5) * 40,
